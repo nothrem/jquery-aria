@@ -12,6 +12,7 @@ jQuery methods:
 jQuery object methods:
   * `.aria`
   * `.removeAria`
+  * `.role` 
   * `.addRole`
   * `.removeRole`
   * `.toggleRole`
