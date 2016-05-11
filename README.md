@@ -18,9 +18,9 @@ jQuery object methods:
   * `.toggleRole`
   * `.hasRole`
   * `.related`
+  * `.atomic`
 
 Planned methods (by nothrem)
-  * `.atomic` (find closest parent with `aria-atomic=true` attribute, returning itself if none found or found one with `aria-atomic=false`)
   * `.addRelated`/`.removeRelated` (edit an aria atribute with id list; should support both adding ids and whole elements, even without ids, generating ids on-the-fly)
   * `.hide`/`.show` (correctly change `aria-hidden` for hidden elements)
   * `.val` (read or set value from/to `aria-valuenow` on elements with `slider`, `spinbutton` and `progressbar` role)
