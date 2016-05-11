@@ -16,9 +16,9 @@ jQuery object methods:
   * `.removeRole`
   * `.toggleRole`
   * `.hasRole`
+  * `.atomic`
 
 Planned methods (by nothrem)
-  * `.atomic` (find closest parent with `aria-atomic=true` attribute, returning itself if none found or found one with `aria-atomic=false`)
   * `.related` (find all elements listed in an aria atribute containing id list)
   * `.addRelated`/`.removeRelated` (edit an aria atribute with id list; should support both adding ids and whole elements, even without ids, generating ids on-the-fly)
   * `.hide`/`.show` (correctly change `aria-hidden` for hidden elements)
