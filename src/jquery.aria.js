@@ -407,6 +407,70 @@
 			}
 
 			return this;
-		}
+		},
+
+		//Public: finds all elements referenced in an ARIA attribute with id list
+		//
+		// attr - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
+		//				Values 'label', 'desc'and 'description' are converted to 'aria-labelledby' and 'aria-describedby' respectively.
+		//				Values starting with '$' will be read from data-* attribute instead of 'aria-*' one.
+		// selector - Filter for the elements. Filters like :first are applied to all elements, not per-item.
+		//
+		// Examples
+		//
+		// $('[role=menu]')
+		//		.children().show().end() //show all inner menu items
+		//		.related().show().end()  //show all elements from aria-owns
+		//		.show()                  //show itself - end() works correctly after related()
+		//
+		// $('[role=treeitem]').related('controls').hide(); //hide all elements from aria-controls
+		// $('#list').related('$items').hide();             //hide all elements from data-items
+		//
+		// Returns a jQuery object
+		related: function(attr, selector) {
+			if (void 0 === attr) {
+				attr = 'aria-owns';
+			}
+			else if ('string' === typeof attr) {
+				if ('$' === attr[0]) {
+					attr = 'data-' + attr.substr(1);
+				}
+				else {
+					switch (attr.toLowerCase()) {
+						case 'label':
+							attr = 'labelledby';
+							break;
+						case 'desc':
+						case 'description':
+							attr = 'describedby';
+							break;
+					}
+					attr = 'aria-' + attr;
+				}
+			}
+
+			var els = $([]);
+
+			this.each(function() {
+				var i, cnt, list = $(this).attr(attr);
+				if (void 0 === list) {
+					return;
+				}
+				list = list.split(/\s+/);
+				console.log('found', list, els);
+				for (i = 0, cnt = list.length; i < cnt; ++i) {
+					console.log('looking for', list[i], document.getElementById(list[i]));
+					els = els.add(document.getElementById(list[i]));
+				}
+			});
+
+			if ('string' === typeof selector && '' !== selector) {
+				els = els.filter(selector);
+			}
+
+			els.prevObject = this;
+
+			return els;
+		} //relate()
 	});
 })(jQuery);
