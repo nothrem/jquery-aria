@@ -1,0 +1,26 @@
+<html>
+<head>
+	<title>Role test</title>
+	<script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+	<script src="../src/jquery.aria.js"></script>
+</head>
+<body>
+	<h1>Role test</h1>
+	<div id=test1 role="menu navigation"><div id=test2></div></div>
+	<script>
+		document.write('Test role reading: ');
+		document.write('menu navigation' === $('#test1').role() ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test role writing: ');
+		document.write('menuitem link' === $('#test2').role('menuitem link').attr('role') ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test role overwriting: ');
+		document.write('button link' === $('#test2').addRole('button').role('button link').attr('role') ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test finished');
+	</script>
+</body>
+</html>
