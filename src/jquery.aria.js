@@ -178,6 +178,28 @@
 			return this;
 		},
 
+		//Public: read or set ARIA roles from/to an element
+		//
+		// roles - New role or a list of roles to set. If undefined, will return current roles.
+		//
+		// Examples:
+		//
+		//   element.role('table');
+		//   element.role('menuitem link');
+		//
+		//   if (element.role() === 'checkbox') { return element.aria('checked'); }
+		//
+		// Returns the element(s) or the role(s)
+		role: function(roles) {
+			if (void 0 === roles) {
+				return this.attr('role');
+			}
+			if ($.isArray(roles)) {
+				roles = roles.join(' ');
+			}
+			return this.attr('role', roles);
+		}, //role()
+
 		// Public: Adds roles to the ARIA "role" attribute.
 		//
 		// value - The String or Function returning a String of space separated
