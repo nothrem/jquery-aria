@@ -385,6 +385,44 @@
 			}
 
 			return this;
-		}
+		},
+
+		//Public: Return closest atomic element according to ARIA specification
+		//
+		// see https://www.w3.org/TR/wai-aria-1.1/#aria-atomic
+		//
+		// 1. If none of the ancestors have explicitly set aria-atomic ... will only present the changed node to the user.
+		// 2. If aria-atomic is explicitly set to false, ... will stop searching up the ancestor chain and present only the changed node to the user.
+		// 3. If aria-atomic is explicitly set to true, ... will present the entire contents of the element ...
+		//
+		// Examples
+		//
+		//	 $(window).on('alert', function(message) {
+		//		 $('[role=alert]')
+		//			 .text(message)    //set alert message
+		//			 .atomic().show()  //show the alert or its parent marked as atomic
+		//		 ;
+		//	 });
+		//
+		// Returns a jQuery object with one HTMLElement for each initial element.
+		atomic: function() {
+			var els = $([]);
+
+			this.each(function() {
+				var el = $(this).closest('[aria-atomic]');
+
+				if (!el.length || "false" === el.attr('aria-atomic')) {
+					els = els.add(this);
+				}
+				else {
+					els = els.add(el);
+				}
+			});
+
+			els.prevObject = this;
+
+			return els;
+		} //atomic()
+
 	});
 })(jQuery);

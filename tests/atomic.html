@@ -1,0 +1,47 @@
+<html>
+<head>
+	<title>Atomic test</title>
+	<script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+	<script src="../src/jquery.aria.js"></script>
+	<style>
+		[role=main], [role~=menu], [role~=menuitem] { display: none; }
+	</style>
+</head>
+<body>
+	<h1>Atomic test</h1>
+	<div id=test0 role=main aria-atomic=false>
+		<div id=test1 role=menu>
+			<div id=test2 role=menuitem aria-atomic=true>
+				<span id=test3 role=link></span>
+			</div>
+		</div>
+	</div>
+	<div id=test4><div id=test5></div></div>
+	<script>
+		document.write('Test atomic parent: ');
+		document.write($('#test2')[0] === $('#test3').atomic()[0] ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test atomic self: ');
+		document.write($('#test2')[0] === $('#test2').atomic()[0] ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test atomic false: ');
+		console.log($('#test1').atomic());
+		document.write($('#test1')[0] === $('#test1').atomic()[0] ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test atomic none: ');
+		document.write($('#test5')[0] === $('#test5').atomic()[0] ? 'OK' : 'failed');
+		document.write('<br>');
+
+		document.write('Test atomic multi-search: ');
+		items = $('#test3, #test1, #test5').atomic(); //will be sorted by DOM order; for test3 returns test2, for others return themself
+		document.write($('#test1')[0] === items[0] && $('#test2')[0] === items[1] && $('#test5')[0] === items[2] ? 'OK' : 'failed');
+		document.write('<br>');
+
+
+		document.write('Test finished');
+	</script>
+</body>
+</html>
