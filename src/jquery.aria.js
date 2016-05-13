@@ -427,29 +427,40 @@
 		// $('#list').related('$items').hide();             //hide all elements from data-items
 		//
 		// Returns a jQuery object
-		related: function(attr, selector) {
-			if (void 0 === attr) {
+		related: function(relation, selector) {
+			var els = $([]);
+
+			if (void 0 === relation || '' === relation) {
 				attr = 'aria-owns';
 			}
-			else if ('string' === typeof attr) {
-				if ('$' === attr[0]) {
-					attr = 'data-' + attr.substr(1);
+			else if ('string' === typeof relation) {
+				if ('$' === relation[0]) {
+					attr = 'data-' + relation.substr(1);
 				}
 				else {
-					switch (attr.toLowerCase()) {
+					switch (relation.toLowerCase()) {
 						case 'label':
-							attr = 'labelledby';
+							relation = 'labelledby';
 							break;
 						case 'desc':
 						case 'description':
-							attr = 'describedby';
+							relation = 'describedby';
 							break;
 					}
-					attr = 'aria-' + attr;
+					attr = 'aria-' + relation;
 				}
 			}
-
-			var els = $([]);
+			else if ('function' === typeof relation) {
+				this.each(function() {
+					els = els.add($(this).related(relation.apply(this, arguments), selector));
+				});
+				els.prevObject = this;
+				return els;
+			}
+			else {
+				throw new Error('Unsupported relation ' + relation);
+				return;
+			}
 
 			this.each(function() {
 				var i, cnt, list = $(this).attr(attr);
@@ -457,21 +468,20 @@
 					return;
 				}
 				list = list.split(/\s+/);
-				console.log('found', list, els);
 				for (i = 0, cnt = list.length; i < cnt; ++i) {
-					console.log('looking for', list[i], document.getElementById(list[i]));
 					els = els.add(document.getElementById(list[i]));
 				}
 			});
 
-			if ('string' === typeof selector && '' !== selector) {
+			if (('string' === typeof selector && '' !== selector)
+					|| 'function' === typeof selector) { //function selector is supported by filter()
 				els = els.filter(selector);
 			}
 
 			els.prevObject = this;
 
 			return els;
-		}, //relate()
+		}, //related()
 
 		//Public: Return closest atomic element according to ARIA specification
 		//
