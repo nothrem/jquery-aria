@@ -25,9 +25,6 @@
 			items = $('.menu'),
 			ok = true;
 
-		console.log('related:', related);
-		console.log('items:', items);
-
 		items.each(function(i) {
 			if (related[i] !== this) {
 				ok = false;
@@ -44,9 +41,6 @@
 			related = $('.menu').related(),
 			items = $('.menuitem'),
 			ok = true;
-
-		console.log('related:', related);
-		console.log('items:', items);
 
 		items.each(function(i) {
 			if (related[i] !== this) {
@@ -65,9 +59,6 @@
 			items = $('.label'),
 			ok = true;
 
-		console.log('related:', related);
-		console.log('items:', items);
-
 		items.each(function(i) {
 			if (related[i] !== this) {
 				ok = false;
@@ -85,10 +76,6 @@
 			related2 = $('.menu').related('description');
 			items = $('.label'), //even though descriptions are reversed, jQuery sorts elements by theirs DOM order
 			ok = true;
-
-		console.warn('related 1:', related1);
-		console.warn('related 2:', related2);
-		console.warn('items:', items);
 
 		items.each(function(i) {
 			if (related1[i] !== this || related2[i] !== this) {
@@ -119,14 +106,10 @@
 		//---------------------------------------------
 
 		document.write('Test filter: ');
-		console.log('FILTER');
 		var
 			related = $('.label').related('$items', ':first, :last'),
 			items = $('#menuitem1, #menuitem5'),
 			ok = true;
-
-		console.log('related:', related);
-		console.log('items:', items);
 
 		items.each(function(i) {
 			if (related[i] !== this) {
@@ -140,14 +123,10 @@
 		//---------------------------------------------
 
 		document.write('Test end(): ');
-		console.log('FILTER');
 		var
 			items = $('.menu'),
 			related = items.related().end(),
 			ok = true;
-
-		console.log('related:', related);
-		console.log('items:', items);
 
 		items.each(function(i) {
 			if (related[i] !== this) {
@@ -161,16 +140,12 @@
 		//---------------------------------------------
 
 		document.write('Test addBack(): ');
-		console.log('FILTER');
 		var
 			items = $('.menu'),
 			related = items.related().addBack(),
 			ok = true;
 
 		items = items.add('.menuitem');
-
-		console.log('related:', related);
-		console.log('items:', items);
 
 		items.each(function(i) {
 			if (related[i] !== this) {
@@ -181,6 +156,55 @@
 		if (7 !== items.length || 7 !== related.length) {
 			ok = false;
 		}
+
+		document.write(ok ? 'OK' : 'failed');
+		document.write('<br>');
+
+		//---------------------------------------------
+
+		document.write('Test function relation: ');
+		var
+			items = $('.menu, .menuitem'),
+			labels = $('.label, .menu'),
+			relation = function(i) {
+				var me = $(this);
+				if (me.hasRole('menu')) {
+					return; //undefined looks for aria-owns
+				}
+				else if (me.hasRole('heading')) {
+					return 'controls';
+				}
+				return false; //false not supported -
+			},
+			related = labels.related(relation),
+			ok = true;
+
+		items.each(function(i) {
+			if (related[i] !== this) {
+				ok = false;
+			}
+		});
+
+		document.write(ok ? 'OK' : 'failed');
+		document.write('<br>');
+
+		//---------------------------------------------
+
+		document.write('Test error: ');
+		var
+			related = void 0,
+			ok = true;
+
+		try {
+			related = $('.label').related(false);
+			ok = false;
+		} catch (e) { }
+		try {
+			related = $('.label').related({});
+			ok = false;
+		} catch (e) { }
+
+		ok = ok && void 0 === related;
 
 		document.write(ok ? 'OK' : 'failed');
 		document.write('<br>');

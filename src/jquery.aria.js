@@ -406,7 +406,9 @@
 		//
 		// Returns a jQuery object
 		related: function(relation, selector) {
-			if (void 0 === relation) {
+			var els = $([]);
+
+			if (void 0 === relation || '' === relation) {
 				attr = 'aria-owns';
 			}
 			else if ('string' === typeof relation) {
@@ -426,8 +428,17 @@
 					attr = 'aria-' + relation;
 				}
 			}
-
-			var els = $([]);
+			else if ('function' === typeof relation) {
+				this.each(function() {
+					els = els.add($(this).related(relation.apply(this, arguments), selector));
+				});
+				els.prevObject = this;
+				return els;
+			}
+			else {
+				throw new Error('Unsupported relation ' + relation);
+				return;
+			}
 
 			this.each(function() {
 				var i, cnt, list = $(this).attr(attr);
@@ -435,14 +446,13 @@
 					return;
 				}
 				list = list.split(/\s+/);
-				console.log('found', list, els);
 				for (i = 0, cnt = list.length; i < cnt; ++i) {
-					console.log('looking for', list[i], document.getElementById(list[i]));
 					els = els.add(document.getElementById(list[i]));
 				}
 			});
 
-			if ('string' === typeof selector && '' !== selector) {
+			if (('string' === typeof selector && '' !== selector)
+					|| 'function' === typeof selector) { //function selector is supported by filter()
 				els = els.filter(selector);
 			}
 
