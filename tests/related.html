@@ -211,6 +211,39 @@
 
 		//---------------------------------------------
 
+		document.write('Test remove related: ');
+		var
+			item = $('#menuitem1'),
+			related = 'menu1 menu2 title1 title2',
+			ok = true;
+
+		item.aria('test', related);
+		item.removeRelated('test', 'menu2 title2');
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', ['menu2', 'title2']);
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', $('#menu2, #title2'));
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated(function() { return 'test';}, $('#menu2, #title2'));
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', function(relative) {
+			return (-1 < relative.indexOf('2'));
+		});
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		document.write(ok ? 'OK' : 'failed');
+		document.write('<br>');
+
+		//---------------------------------------------
+
 		document.write('Test finished');
 	</script>
 </body>
