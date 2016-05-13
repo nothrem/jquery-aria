@@ -405,25 +405,25 @@
 		// $('#list').related('$items').hide();             //hide all elements from data-items
 		//
 		// Returns a jQuery object
-		related: function(attr, selector) {
-			if (void 0 === attr) {
+		related: function(relation, selector) {
+			if (void 0 === relation) {
 				attr = 'aria-owns';
 			}
-			else if ('string' === typeof attr) {
-				if ('$' === attr[0]) {
-					attr = 'data-' + attr.substr(1);
+			else if ('string' === typeof relation) {
+				if ('$' === relation[0]) {
+					attr = 'data-' + relation.substr(1);
 				}
 				else {
-					switch (attr.toLowerCase()) {
+					switch (relation.toLowerCase()) {
 						case 'label':
-							attr = 'labelledby';
+							relation = 'labelledby';
 							break;
 						case 'desc':
 						case 'description':
-							attr = 'describedby';
+							relation = 'describedby';
 							break;
 					}
-					attr = 'aria-' + attr;
+					attr = 'aria-' + relation;
 				}
 			}
 
@@ -449,6 +449,6 @@
 			els.prevObject = this;
 
 			return els;
-		} //relate()
+		} //related()
 	});
 })(jQuery);
