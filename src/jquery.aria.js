@@ -26,7 +26,11 @@
 // dependency: jQuery, ~> 1.7.1
 
 (function($) {
-	var calculateRelation;
+	var
+		//private variables
+		relationId = 0,
+		//private methods
+		calculateRelation;
 
 	//Private: process a relation and return expected attribute name
 	//
@@ -510,9 +514,106 @@
 			return els;
 		}, //related()
 
+		//Public: adds elements into an ARIA attribute with list of ids
+		//
+		// relation - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
+		//				Values 'label', 'desc'and 'description' are converted to 'aria-labelledby' and 'aria-describedby' respectively.
+		//				Values starting with '$' will be read from data-* attribute instead of 'aria-*' one.
+		//				If function given, it will be called for each element and should return name of an ARIA or Data attribute.
+		// elements - String, Array list or jQuery object of either string ids, HTML elements or functions.
+		//				If function given, will be called for each element and should return string id, HTML element or a function.
+		//				If a function is an item in the array, it will be called and should return HTML element.
+		//				If a HTML element without id is given, id will be generated based on closest parent with id or 'aria-related-item' with index suffix.
+		//				Note: id generation may not be effective in some cases. If you are having a performance problem,
+		//					please add own ids for the elements before adding them into a relation.
+		//
+		// Examples
+		//
+		// $('#menu')
+		//		.addRelated('owns', 'item1 item2')        //add ids
+		//		.addRelated('owns', $('#toolbar [role|=menuitem]') //add toolbar item (and optionally create ids 'toolbar_X')
+		//		.addRelated('owns', $('<div>'))           //will create 'aria-related-item_1' id for the DIV
+		// ; //aria-own of #menu may be 'item1 item2 toolbar_1 toolbar_2 aria-related-item_3'
+		//
+		// Returns a jQuery object
+		addRelated: function(relation, elements) {
+			var me = this, els = $([]);
+
+			if ('function' === typeof elements) {
+				this.each(function() {
+					$(this).addRelated(relation, elements.apply(this, arguments));
+				});
+				return this;
+			}
+
+			attr = calculateRelation.call(this, relation, function(relation) {
+				this.each(function() {
+					$(this).addRelated(relation.apply(this, arguments), elements);
+				});
+				return true;
+			});
+			if (true === attr) { //already processed via functional relation
+				return this;
+			}
+
+			if ('string' === typeof elements) {
+				elements = elements.split(/\s+/);
+			}
+
+			if (1 === elements.length && 'string' === typeof elements[0] && '' !== elements[0]) {
+				this.each(function() {
+					var current_relatives = $(this).attr(attr);
+
+					if ('string' === typeof current_relatives) {
+						current_relatives = ' ' + current_relatives.split(/\s+/).join(' ') + ' ';
+
+						if (0 > current_relatives.indexOf(' ' + elements[0] + ' ')) {
+							current_relatives += ' ' + elements[0];
+						} //else already in list
+
+						$(this).attr(attr, current_relatives.replace(/^\ |\ $/g, '').replace(/\ \ /g, ' '));
+					}
+					else {
+						$(this).attr(attr, elements[0]);
+					}
+				});
+
+				return this;
+			}
+			else {
+				$.each(elements, function() {
+					var el, id;
+					if ('string' === typeof this) {
+						el = document.getElementById(this);
+					}
+					else if ('function' === typeof this) {
+						el = this.apply(me, arguments);
+					}
+					else {
+						el = this;
+					}
+					el = $(el);
+					id = el.attr('id');
+
+					if (!id) { //element has no id - create random one to create relation
+						id = el.closest('[id]').attr('id') || 'aria-related-item';
+						while (document.getElementById(id + '_' + (++relationId))) {
+							//nothing, just repeat until non-existing id is found
+						}
+						id += '_' + relationId;
+						el.attr('id', id);
+					}
+
+					me.addRelated(relation, id);
+				});
+
+				return this;
+			}
+		}, //addRelated()
+
 		//Public: removes elements from an ARIA attribute with list of ids
 		//
-		// attr - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
+		// relation - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
 		//				Values 'label', 'desc'and 'description' are converted to 'aria-labelledby' and 'aria-describedby' respectively.
 		//				Values starting with '$' will be read from data-* attribute instead of 'aria-*' one.
 		//				If function given, it will be called for each element and should return name of an ARIA or Data attribute.

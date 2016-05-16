@@ -18,10 +18,11 @@ jQuery object methods:
   * `.toggleRole`
   * `.hasRole`
   * `.related`
+  * `.addRelated`
+  * `.removeRelated`
   * `.atomic`
-
+  
 Planned methods (by nothrem)
-  * `.addRelated`/`.removeRelated` (edit an aria atribute with id list; should support both adding ids and whole elements, even without ids, generating ids on-the-fly)
   * `.hide`/`.show` (correctly change `aria-hidden` for hidden elements)
   * `.val` (read or set value from/to `aria-valuenow` on elements with `slider`, `spinbutton` and `progressbar` role)
   * `.button` (correctly change `aria-pressed` for JQUI buttons; if JQUI is installed)
