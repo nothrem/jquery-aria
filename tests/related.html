@@ -9,7 +9,7 @@
 </head>
 <body>
 	<h1>Related test</h1>
-	<h2 id=title1 class="label" role=heading aria-controls=menu1 data-items="menuitem1 menuitem2 menuitem3">Menu 1</h2>
+	<h2 id=title1 class="label" role=heading aria-controls=menu1 data-items="menuitem2 menuitem3 menuitem1">Menu 1</h2>
 	<h2 id=title2 class="label" role=heading aria-controls=menu2 data-items="menuitem4 menuitem5">Menu 2</h2>
 	<div id=menu1 class="menu" role="menu navigation" aria-labelledby=title1 aria-describedby=title2 aria-owns="menuitem1 menuitem2 menuitem3"></div>
 	<div id=menu2 class="menu" role="menu navigation" aria-labelledby=title2 aria-describedby=title1 aria-owns="menuitem4 menuitem5"></div>
@@ -108,7 +108,7 @@
 		document.write('Test filter: ');
 		var
 			related = $('.label').related('$items', ':first, :last'),
-			items = $('#menuitem1, #menuitem5'),
+			items = $('#menuitem1, #menuitem3, #menuitem4, #menuitem5'),
 			ok = true;
 
 		items.each(function(i) {
@@ -205,6 +205,39 @@
 		} catch (e) { }
 
 		ok = ok && void 0 === related;
+
+		document.write(ok ? 'OK' : 'failed');
+		document.write('<br>');
+
+		//---------------------------------------------
+
+		document.write('Test remove related: ');
+		var
+			item = $('#menuitem1'),
+			related = 'menu1 menu2 title1 title2',
+			ok = true;
+
+		item.aria('test', related);
+		item.removeRelated('test', 'menu2 title2');
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', ['menu2', 'title2']);
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', $('#menu2, #title2'));
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated(function() { return 'test';}, $('#menu2, #title2'));
+		ok = ok && item.aria('test') === 'menu1 title1';
+
+		item.aria('test', related);
+		item.removeRelated('test', function(relative) {
+			return (-1 < relative.indexOf('2'));
+		});
+		ok = ok && item.aria('test') === 'menu1 title1';
 
 		document.write(ok ? 'OK' : 'failed');
 		document.write('<br>');

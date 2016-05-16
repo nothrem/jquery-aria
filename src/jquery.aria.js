@@ -26,6 +26,50 @@
 // dependency: jQuery, ~> 1.7.1
 
 (function($) {
+	var calculateRelation;
+
+	//Private: process a relation and return expected attribute name
+	//
+	// relation - A relation to process.
+	//
+	// callback - A function to process relation passed as a function.
+	//
+	// Returns string or whatever the callback returns.
+	// Throws exception for unsupported relation.
+	calculateRelation = function(relation, callback) {
+		var attr;
+
+		if (void 0 === relation || '' === relation) {
+			attr = 'aria-owns';
+		}
+		else if ('string' === typeof relation) {
+			if ('$' === relation[0]) {
+				attr = 'data-' + relation.substr(1);
+			}
+			else {
+				switch (relation.toLowerCase()) {
+					case 'label':
+						relation = 'labelledby';
+						break;
+					case 'desc':
+					case 'description':
+						relation = 'describedby';
+						break;
+				}
+				attr = 'aria-' + relation;
+			}
+		}
+		else if ('function' === typeof relation) {
+			return callback.call(this, relation);
+		}
+		else {
+			throw new Error('Unsupported relation ' + relation);
+			return;
+		}
+
+		return attr;
+	};
+
 	$.extend({
 		// Public: Gets and sets ARIA attributes.
 		//
@@ -411,10 +455,13 @@
 
 		//Public: finds all elements referenced in an ARIA attribute with id list
 		//
-		// attr - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
+		// relation - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
 		//				Values 'label', 'desc'and 'description' are converted to 'aria-labelledby' and 'aria-describedby' respectively.
 		//				Values starting with '$' will be read from data-* attribute instead of 'aria-*' one.
-		// selector - Filter for the elements. Filters like :first are applied to all elements, not per-item.
+		//				If function given, it will be called for each element and should return name of an ARIA or Data attribute.
+		// selector - Filter for the elements.
+		//				Filters like :first are applied per-item to each element's related items.
+		//				Filters like :first consider DOM order instead if the order in related attribute.
 		//
 		// Examples
 		//
@@ -430,58 +477,130 @@
 		related: function(relation, selector) {
 			var els = $([]);
 
-			if (void 0 === relation || '' === relation) {
-				attr = 'aria-owns';
-			}
-			else if ('string' === typeof relation) {
-				if ('$' === relation[0]) {
-					attr = 'data-' + relation.substr(1);
-				}
-				else {
-					switch (relation.toLowerCase()) {
-						case 'label':
-							relation = 'labelledby';
-							break;
-						case 'desc':
-						case 'description':
-							relation = 'describedby';
-							break;
-					}
-					attr = 'aria-' + relation;
-				}
-			}
-			else if ('function' === typeof relation) {
+			attr = calculateRelation.call(this, relation, function(relation) {
 				this.each(function() {
 					els = els.add($(this).related(relation.apply(this, arguments), selector));
 				});
 				els.prevObject = this;
+				return true;
+			});
+			if (true === attr) { //already processed via functional relation
 				return els;
-			}
-			else {
-				throw new Error('Unsupported relation ' + relation);
-				return;
 			}
 
 			this.each(function() {
-				var i, cnt, list = $(this).attr(attr);
+				var i, cnt, list = $(this).attr(attr), tmp = $([]);
 				if (void 0 === list) {
 					return;
 				}
 				list = list.split(/\s+/);
 				for (i = 0, cnt = list.length; i < cnt; ++i) {
-					els = els.add(document.getElementById(list[i]));
+					tmp = tmp.add(document.getElementById(list[i]));
 				}
-			});
 
-			if (('string' === typeof selector && '' !== selector)
-					|| 'function' === typeof selector) { //function selector is supported by filter()
-				els = els.filter(selector);
-			}
+				if (('string' === typeof selector && '' !== selector)
+						|| 'function' === typeof selector) { //function selector is supported by filter()
+					tmp = tmp.filter(selector);
+				}
+				els = els.add(tmp);
+			});
 
 			els.prevObject = this;
 
 			return els;
 		}, //related()
+
+		//Public: removes elements from an ARIA attribute with list of ids
+		//
+		// attr - Name of an ARIA attribute (without aria- prefix). If not defined, will use aria-owns.
+		//				Values 'label', 'desc'and 'description' are converted to 'aria-labelledby' and 'aria-describedby' respectively.
+		//				Values starting with '$' will be read from data-* attribute instead of 'aria-*' one.
+		//				If function given, it will be called for each element and should return name of an ARIA or Data attribute.
+		// elements - String, Array list or jQuery object of either string ids or elements with ids.
+		//				If function given, will be called for each related id in each element and should return True (remove this one) or False (keep it in related)
+		//
+		// Examples
+		//
+		// $('#menu')
+		//		.removeRelated('owns', 'item1 item2') //remove ids from attribute
+		//		.removeRelated(function() { $(this).data('relation-attribute'); }, 'item1 item2') //get attribute name from another attribute
+		//		.removeRelated('owns', function(id, index, element_index) {
+		//				return (index > 10)                   //keep only first 10 relatives
+		//					|| !document.getElementById(id)   //or remove non-existing elements
+		//					|| $(this).data('keep-relatives') //access other attributes of the element
+		//		})
+		// ;
+		//
+		// Returns a jQuery object
+		removeRelated: function(relation, elements) {
+			var i, cnt, id, els;
+
+			attr = calculateRelation.call(this, relation, function(relation) {
+				this.each(function() {
+					$(this).removeRelated(relation.apply(this, arguments), elements);
+				});
+				return true;
+			});
+			if (true === attr) { //already processed via functional relation
+				return this;
+			}
+
+			if (void 0 === elements) {
+				this.removeAttr(attr); //if no elements given, remove all by deleting the attribute (same as removeClass())
+				return this;
+			}
+			if ('string' === typeof elements) {
+				elements = elements.split(/\s+/);
+			}
+			else if ('function' === typeof elements) {
+				this.each(function(index) {
+					var current_relatives = $(this).attr(attr), new_relatives = [], result;
+
+					if ('string' === typeof current_relatives) {
+						current_relatives = current_relatives.split(/\s+/);
+
+						for (i = 0, cnt = current_relatives.length; i < cnt; ++i) {
+							if (!elements.call(this, current_relatives[i], i, index)) {
+								new_relatives.push(current_relatives[i]);
+							}
+						}
+
+						$(this).attr(attr, new_relatives.join(' '));
+					}
+				});
+				return this;
+			}
+			else if (elements && elements.length) { //array or jQuery object
+				els = [];
+				for (i = 0, cnt = elements.length; i < cnt; ++i) {
+					if ('string' === typeof elements[i] && '' !== elements[i]) {
+						els.push(elements[i]);
+					}
+					else {
+						id = $(elements[i]).attr('id');
+						if ('string' === typeof id && '' !== id) {
+							els.push(id);
+						}
+					}
+				}
+				elements = els;
+			}
+
+			this.each(function() {
+				var current_relatives = $(this).attr(attr);
+
+				if ('string' === typeof current_relatives) {
+					current_relatives = ' ' + current_relatives.split(/\s+/).join(' ') + ' ';
+
+					for (i = 0, cnt = elements.length; i < cnt; ++i) {
+						current_relatives = current_relatives.replace(' ' + elements[i] + ' ', ' ');
+					}
+
+					$(this).attr(attr, current_relatives.replace(/^\ |\ \ |\ $/g, ''));
+				}
+			});
+			return this;
+		}, //removeRelated()
 
 		//Public: Return closest atomic element according to ARIA specification
 		//
